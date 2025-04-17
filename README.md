@@ -10,8 +10,6 @@ The error logging system leverages a CloudWatch subscription filter to capture e
 - Sends email notifications via Amazon SNS
 - Infrastructure is fully defined in Terraform
 
----
-
 ## Architecture
 
 ![Lambda ➡️ Logs ➡️ CloudWatch Metric Filter ➡️ Alarm ➡️ SNS ➡️ Email](/Architecture-SNS-Alert.png)
@@ -19,6 +17,7 @@ The error logging system leverages a CloudWatch subscription filter to capture e
 ## Technologies Used
 -   AWS Lambda (Python)
 -   AWS RDS (MySQL)
+-   AWS S3 Bucket
 -   AWS CloudWatch
 -   AWS SNS
 -   Terraform
@@ -55,17 +54,9 @@ The error logging system leverages a CloudWatch subscription filter to capture e
         ]
     }
     ```
-- Terraform installed
+- Terraform installed and connected with AWS credentials through YOUR_ACCESS_KEY_ID and YOUR_SECRET_ACCESS_KEY and AWSconfig for region = "eu-north-1"
 
 ## Explanation of [main.tf](main.tf) file(Terraform file)
-
-```
-provider "aws" {
-  region = "eu-north-1"
-}
-```
-- This sets the AWS region where all your resources will be created (eu-north-1, aka Stockholm).
-- Required to tell Terraform where to deploy things.
 
 ### Create an SNS Topic for Alerts
 ```
