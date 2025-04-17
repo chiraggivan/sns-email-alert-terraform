@@ -27,7 +27,7 @@ Lambda ➡️ Logs ➡️ CloudWatch Metric Filter ➡️ Alarm ➡️ SNS ➡�
 - IAM user/role with permissions: `Lambda`, `RDS`, `CloudWatch`, `SNS`, `SSM`
 - Terraform installed
 
-## Explanation of main.tf file(Terraform file)
+## Explanation of [main.tf](main.tf) file(Terraform file)]
 
 ```
 provider "aws" {
@@ -37,6 +37,7 @@ provider "aws" {
 - This sets the AWS region where all your resources will be created (eu-north-1, aka Stockholm).
 - Required to tell Terraform where to deploy things.
 
+### Create an SNS Topic for Alerts
 ```
 resource "aws_sns_topic" "logger_alerts" {
   name = "logger-alert-topic"
@@ -45,6 +46,7 @@ resource "aws_sns_topic" "logger_alerts" {
 - This creates an SNS topic called logger-alert-topic.
 - SNS is used to send notifications — here, email alerts when errors occur.
 
+### Subscribe Your Email
 ```
 resource "aws_sns_topic_subscription" "email_alert" {
   topic_arn = aws_sns_topic.logger_alerts.arn
@@ -56,6 +58,7 @@ resource "aws_sns_topic_subscription" "email_alert" {
 - When an alert is triggered, an email will be sent to you.
 - You'll get a confirmation email first — you have to confirm the subscription manually once.
 
+### Turn Logs into Metrics
 ```
 resource "aws_cloudwatch_log_metric_filter" "logger_error_filter" {
   name           = "logger-error-filter"
@@ -79,6 +82,7 @@ So it's like:
 “Hey CloudWatch, turn these logs into countable metrics I can set alarms on.”
 aws_cloudwatch_metric_alarm — Set Alarm on Error Metric
 
+### Set Alarm on Error Metric
 ```
 resource "aws_cloudwatch_metric_alarm" "logger_error_alarm" {
   alarm_name          = "LoggerErrorAlarm"
@@ -106,3 +110,18 @@ This creates an alarm that:
 - Sends a notification via the SNS topic
 - treat_missing_data = "notBreaching" means:
 - If there's no data (e.g., no logs yet), it won’t trigger the alarm unnecessarily.
+
+##  How It All Works (In Order)
+1. A Lambda function (RDStoS3function) logs an error like "ERROR: something failed".
+2. CloudWatch Log Metric Filter detects "ERROR" in the logs and turns it into a custom metric.
+3. The custom metric (LoggerErrorCount) increments.
+4. If this metric hits the threshold (≥ 1), CloudWatch Alarm triggers.
+5. The alarm publishes a message to the SNS topic.
+6. SNS sends an email to the registered address — no human ever logged into AWS UI!
+
+**Terraform** manages the entire lifecycle — if you need to change things (like a different email or threshold), just update the code and terraform apply again.
+
+## Future Improvements
+- Add Slack/Telegram integration for alerts
+- Use Secrets Manager for DB creds
+- Add real-time dashboards with Grafana or Datadog
