@@ -14,7 +14,7 @@ The error logging system leverages a CloudWatch subscription filter to capture e
 
 ## Architecture
 
-Lambda ➡️ Logs ➡️ CloudWatch Metric Filter ➡️ Alarm ➡️ SNS ➡️ Email
+![Lambda ➡️ Logs ➡️ CloudWatch Metric Filter ➡️ Alarm ➡️ SNS ➡️ Email]()
 
 ## Technologies Used
 -   AWS Lambda (Python)
@@ -24,10 +24,40 @@ Lambda ➡️ Logs ➡️ CloudWatch Metric Filter ➡️ Alarm ➡️ SNS ➡�
 -   Terraform
 
 ## Prerequisites: 
-- IAM user/role with permissions: `Lambda`, `RDS`, `CloudWatch`, `SNS`, `SSM`
+- IAM user/role with permissions: `Lambda`, `RDS`, `CloudWatch`, `SSM` are already there
+    - AWS `SNS` permission are to be added
+    - Permissions for Metric filter for CloudWatch Logs
+    ```
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "logs:PutMetricFilter",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams",
+                    "logs:DescribeMetricFilters",
+                    "logs:DeleteMetricFilter",
+                    "cloudwatch:PutMetricAlarm",
+                    "cloudwatch:DescribeAlarms",
+                    "cloudwatch:DeleteAlarms",
+                    "cloudwatch:GetMetricData",
+                    "cloudwatch:ListMetrics",
+                    "cloudwatch:ListTagsForResource",
+                    "sns:Publish",
+                    "sns:Subscribe",
+                    "sns:ListSubscriptionsByTopic",
+                    "sns:ListTopics"
+                ],
+                "Resource": "*"
+            }
+        ]
+    }
+    ```
 - Terraform installed
 
-## Explanation of [main.tf](main.tf) file(Terraform file)]
+## Explanation of [main.tf](main.tf) file(Terraform file)
 
 ```
 provider "aws" {
@@ -112,9 +142,9 @@ This creates an alarm that:
 - If there's no data (e.g., no logs yet), it won’t trigger the alarm unnecessarily.
 
 ##  How It All Works (In Order)
-1. A Lambda function (RDStoS3function) logs an error like "ERROR: something failed".
-2. CloudWatch Log Metric Filter detects "ERROR" in the logs and turns it into a custom metric.
-3. The custom metric (LoggerErrorCount) increments.
+1. A Lambda function `(RDStoS3function)` logs an error like "ERROR: something failed".
+2. CloudWatch Log Metric Filter detects **"ERROR"** in the logs and turns it into a custom metric.
+3. The custom metric `(LoggerErrorCount)` increments.
 4. If this metric hits the threshold (≥ 1), CloudWatch Alarm triggers.
 5. The alarm publishes a message to the SNS topic.
 6. SNS sends an email to the registered address — no human ever logged into AWS UI!
@@ -122,6 +152,5 @@ This creates an alarm that:
 **Terraform** manages the entire lifecycle — if you need to change things (like a different email or threshold), just update the code and terraform apply again.
 
 ## Future Improvements
-- Add Slack/Telegram integration for alerts
-- Use Secrets Manager for DB creds
+- Add *Slack/Telegram* integration for alerts
 - Add real-time dashboards with Grafana or Datadog
