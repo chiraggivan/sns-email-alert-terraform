@@ -14,7 +14,7 @@ The error logging system leverages a CloudWatch subscription filter to capture e
 
 ## Architecture
 
-![Lambda ➡️ Logs ➡️ CloudWatch Metric Filter ➡️ Alarm ➡️ SNS ➡️ Email]()
+![Lambda ➡️ Logs ➡️ CloudWatch Metric Filter ➡️ Alarm ➡️ SNS ➡️ Email](/Architecture-SNS-Alert.png)
 
 ## Technologies Used
 -   AWS Lambda (Python)
